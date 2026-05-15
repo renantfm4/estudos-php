@@ -64,8 +64,4 @@
     echo "$nome ganha: $dinheiro <br>";
   }
 
-
-
-
-
 ?>
