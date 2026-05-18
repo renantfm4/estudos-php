@@ -1,0 +1,12 @@
+# arquivos sensíveis
+.env
+
+# dependências
+/vendor
+
+# logs
+*.log
+
+# arquivos do sistema
+.DS_Store
+Thumbs.db
