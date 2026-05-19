@@ -1,23 +1,26 @@
 <?php 
 
+// Carrega as variáveis de ambiente do arquivo .env
 $env = parse_ini_file('.env');
 
+// Configurações do banco de dados
 $host = $env['DB_HOST'];
 $usuario = $env['DB_USER'];
 $senha = $env['DB_PASS'];
 $banco = $env['DB_NAME'];
 
-$conn = new mysqli($host, $usuario, $senha, $banco);
+$conn = new mysqli($host, $usuario, $senha, $banco); // Conexão com o banco de dados
 
 if ($conn->connect_error) {
     die("Erro de conexão: " . $conn->connect_error);
 }
 
 // criação da tarefa
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["descricao"])) {
-    $descricao = $conn->real_escape_string($_POST["descricao"]);
-    $sqlInsert = "INSERT INTO tarefas (descricao) VALUES ('$descricao')";
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["descricao"])) { // Verifica se o formulário foi submetido e se a descrição da tarefa foi fornecida
+    $descricao = $conn->real_escape_string($_POST["descricao"]); // Escapa caracteres especiais para evitar SQL Injection
+    $sqlInsert = "INSERT INTO tarefas (descricao) VALUES ('$descricao')"; // SQL para inserir a nova tarefa no banco de dados
 
+    // Executa a query e redireciona para a página principal para evitar reenvio do formulário
     if ($conn->query($sqlInsert) === TRUE) {
         header("Location: 6_todo_crud.php");
         exit();
@@ -27,9 +30,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["descricao"])) {
 }
 
 // exclusão de uma tarefa
-if (isset($_GET["excluir"])) {
-    $id = intval($_GET["excluir"]);
-    $sqlDelete = "DELETE FROM tarefas WHERE id = $id";
+if (isset($_GET["excluir"])) { // Verifica se o parâmetro de exclusão foi fornecido na URL
+    $id = intval($_GET["excluir"]); // Converte o ID para um inteiro para evitar SQL Injection
+    $sqlDelete = "DELETE FROM tarefas WHERE id = $id"; // SQL para excluir a tarefa com o ID especificado
 
     if ($conn->query($sqlDelete) === TRUE) {
         header("Location: 6_todo_crud.php");
@@ -40,10 +43,10 @@ if (isset($_GET["excluir"])) {
 }
 
 // excluir todas as tarefas
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["excluir_todas"])) {
-    $sqlDeleteAll = "DELETE FROM tarefas";
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["excluir_todas"])) { // Verifica se o formulário de exclusão de todas as tarefas foi submetido
+    $sqlDeleteAll = "DELETE FROM tarefas"; // SQL para excluir todas as tarefas do banco de dados
 
-    if ($conn->query($sqlDeleteAll) === TRUE) {
+    if ($conn->query($sqlDeleteAll) === TRUE) { // Executa a query e redireciona para a página principal para evitar reenvio do formulário
         header("Location: 6_todo_crud.php");
         exit();
     } else {
@@ -54,13 +57,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["excluir_todas"])) {
 $tarefas = [];
 
 // resgate das tarefas
-$sqlSelect = "SELECT * FROM tarefas ORDER BY data_criacao DESC";
+$sqlSelect = "SELECT * FROM tarefas ORDER BY data_criacao DESC"; // SQL para selecionar todas as tarefas do banco de dados, ordenando pela data de criação em ordem decrescente
 
+// Executa a query e armazena os resultados em um array
 $result = $conn->query($sqlSelect);
 
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $tarefas[] = $row;
+if ($result->num_rows > 0) { // Verifica se há tarefas retornadas pela query
+    while ($row = $result->fetch_assoc()) { // Itera sobre cada tarefa retornada e adiciona ao array de tarefas
+        $tarefas[] = $row; // Adiciona a tarefa atual ao array de tarefas
     }
 }
 
