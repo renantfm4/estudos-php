@@ -15,6 +15,20 @@ if ($conn->connect_error) {
     die("Erro de conexão: " . $conn->connect_error);
 }
 
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["editar_id"])) {
+    $id = intval($_POST["editar_id"]);
+    $descricao = $conn->real_escape_string($_POST["descricao"]);
+
+    $sqlUpdate = "UPDATE tarefas SET descricao = '$descricao' WHERE id = $id";
+
+    if ($conn->query($sqlUpdate) === TRUE) {
+        header("Location: 6_todo_crud.php");
+        exit();
+    } else {
+        echo "Erro ao editar tarefa: " . $conn->error;
+    }
+}
+
 // criação da tarefa
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["descricao"])) { // Verifica se o formulário foi submetido e se a descrição da tarefa foi fornecida
     $descricao = $conn->real_escape_string($_POST["descricao"]); // Escapa caracteres especiais para evitar SQL Injection
@@ -54,7 +68,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["excluir_todas"])) { /
     }
 }
 
-$tarefas = [];
+$tarefas = []; 
+
+$tarefaEditando = null; // edição de uma tarefa
+
+if (isset($_GET["editar"])) {
+    $id = intval($_GET["editar"]);
+
+    $sqlEdit = "SELECT * FROM tarefas WHERE id = $id";
+    $resultEdit = $conn->query($sqlEdit);
+
+    if ($resultEdit->num_rows > 0) {
+        $tarefaEditando = $resultEdit->fetch_assoc();
+    }
+}
 
 // resgate das tarefas
 $sqlSelect = "SELECT * FROM tarefas ORDER BY data_criacao DESC"; // SQL para selecionar todas as tarefas do banco de dados, ordenando pela data de criação em ordem decrescente
@@ -79,8 +106,21 @@ if ($result->num_rows > 0) { // Verifica se há tarefas retornadas pela query
 <body>
 
     <form action="6_todo_crud.php" method="POST">
-        <input type="text" placeholder="Descrição da Tarefa" name="descricao" required>
-        <button type="submit">Adicionar</button>
+        <input 
+            type="text" 
+            placeholder="Descrição da Tarefa" 
+            name="descricao" 
+            required
+            value="<?php echo $tarefaEditando ? $tarefaEditando["descricao"] : ""; ?>"
+        >
+
+        <?php if ($tarefaEditando): ?>
+            <input type="hidden" name="editar_id" value="<?php echo $tarefaEditando["id"]; ?>">
+            <button type="submit">Salvar edição</button>
+            <a href="6_todo_crud.php">Cancelar</a>
+        <?php else: ?>
+            <button type="submit">Adicionar</button>
+        <?php endif; ?>
     </form>
 
     <h2>Suas tarefas</h2>
@@ -100,7 +140,11 @@ if ($result->num_rows > 0) { // Verifica se há tarefas retornadas pela query
                     <?php echo $tarefa["descricao"]; ?> -
                     <a href="6_todo_crud.php?excluir=<?php echo $tarefa["id"]; ?>">
                         Excluir
+                    </a> - 
+                    <a href="6_todo_crud.php?editar=<?php echo $tarefa["id"]; ?>">
+                        Editar
                     </a>
+                    
                 </li>
             <?php endforeach; ?>
         </ul>
